@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Jugadores</title>
+
+    <style>
+
+        /* esto es todo el diseño general de la página */
+        body{
+            margin: 0;
+            padding: 30px;
+            background-color: #252424;
+            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+        }
+
+        /* el título principal de arriba */
+        h1{
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 30px;
+        }
+
+        /* la tabla donde van a aparecer los juegos */
+        table{
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #1e1e1e;
+        }
+
+        /* la parte de arriba de la tabla donde están los nombres de las columnas */
+        thead{
+            background-color: #00ff88;
+            color: black;
+        }
+
+        th{
+            padding: 15px;
+            text-align: left;
+        }
+
+        /* cada fila de la tabla */
+        td{
+            padding: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        /* cuando pasas el mouse por arriba de una fila se ilumina un poco */
+        tr:hover{
+            background-color: #2b2b2b;
+        }
+
+        /* los inputs donde escribís los datos */
+        input{
+            width: 95%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #2b2b2b;
+            color: white;
+        }
+
+        /* todos los botones generales */
+        button{
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* botón para agregar juegos */
+        .add-btn{
+            background-color: #00ff88;
+            color: black;
+        }
+
+        /* botón para editar */
+        .edit-btn{
+            background-color: #0099ff;
+            color: white;
+        }
+
+        /* botón para eliminar */
+        .delete-btn{
+            background-color: #ff3b3b;
+            color: white;
+        }
+
+        /* esto es la ventanita que aparece cuando editas un juego */
+        #popup{
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #00ff88;
+            width: 300px;
+        }
+
+        /* título dentro del popup */
+        #popup h3{
+            margin-top: 0;
+            text-align: center;
+            color: #00ff88;
+        }
+
+    </style>
+
+    <script>
+
+        /* esta es la URL de la API donde están guardados los juegos */
+        const url = "https://69fd0b4130ad0a6fd1c0705d.mockapi.io/api/players-f/jugadores";
+
+        /* cuando la página carga, automáticamente trae todos los juegos */
+        window.onload = function () {
+            getJugador();
+        }
+
+        /* esta función trae los juegos desde la API */
+        function loadJugador() {
+
+            return new Promise((resolve, reject) => {
+
+                const request = new XMLHttpRequest();
+
+                request.open('GET', url);
+
+                request.responseType = "json";
+
+                request.onload = function () {
+
+                    if (request.status == 200) {
+                        resolve(request.response); // si sale bien devuelve los datos
+                    } else {
+                        reject("no se pudieron cargar los juegadores");
+                    }
+
+                }
+
+                request.onerror = function () {
+                    reject("error de conexión");
+                }
+
+                request.send();
+
+            });
+
+        }
+
+        /* esta función sirve para agregar un juego nuevo */
+        function addJugador() {
+
+            return new Promise((resolve, reject) => {
+
+                const request = new XMLHttpRequest();
+
+                request.open('POST', url);
+
+                request.setRequestHeader("Content-Type", "application/json");
+
+                /* acá agarramos lo que escribió el usuario en los inputs */
+                const jugador = JSON.stringify({
+                    name: document.getElementById("name").value,
+                    club: document.getElementById("club").value,
+                    nationality: document.getElementById("nationality").value
+                });
+
+                request.onload = function () {
+
+                    if (request.status == 201 || request.status == 200) {
+                        resolve(); // se agregó bien
+                    } else {
+                        reject("no se pudo agregar al jugador");
+                    }
+
+                }
+
+                request.onerror = function () {
+                    reject("error de red");
+                }
+
+                request.send(jugador);
+
+            });
+
+        }
+
+        /* esta función elimina un juego según su id */
+        function removeJugador(id) {
+
+            return new Promise((resolve, reject) => {
+
+                const request = new XMLHttpRequest();
+
+                request.open('DELETE', `${url}/${id}`);
+
+                request.onload = function () {
+
+                    if (request.status == 200) {
+                        resolve(); // se borró bien
+                    } else {
+                        reject("no se pudo borrar al jugador");
+                    }
+
+                }
+
+                request.onerror = function () {
+                    reject("error de red");
+                }
+
+                request.send();
+
+            });
+
+        }
+
+        /* esta función modifica un juego ya existente */
+        function modifyJugador() {
+
+            return new Promise((resolve, reject) => {
+                const id = document.getElementById("editId").value;
+
+                const request = new XMLHttpRequest();
+
+                request.open('PUT', `${url}/${id}`);
+
+                request.setRequestHeader("Content-Type", "application/json");
+
+                /* acá se toman los nuevos valores del popup */
+                const jugador = JSON.stringify({
+                    name: document.getElementById("editName").value,
+                    club: document.getElementById("editClub").value,
+                    nationality: document.getElementById("editNationality").value
+                });
+
+                request.onload = function () {
+
+                    if (request.status == 200) {
+                        resolve(); // se actualizó bien
+                    } else {
+                        reject("no se pudo actualizar al jugador");
+                    }
+
+                }
+
+                request.onerror = function () {
+                    reject("error de red");
+                }
+
+                request.send(jugador);
+
+            });
+
+        }
+
+        /* esta función carga todos los juegos en la tabla */
+        function getJugador() {
+
+            loadJugador()
+                .then(jugadores => {
+
+                    const tbody = document.querySelector("tbody");
+
+                    tbody.innerHTML = ""; // limpia la tabla antes de volver a cargar
+
+                    jugadores.forEach(jugador => {
+                        insertRow(jugador); // crea una fila por cada jugador
+                    });
+
+                })
+                .catch(error => console.log(error));
+
+        }
+
+        /* esta función guarda un juego nuevo */
+        function saveJugador() {
+
+            /* chequea que no estén vacíos los campos */
+            if (
+                document.getElementById("name").value.trim() != "" &&
+                document.getElementById("club").value.trim() != "" &&
+                document.getElementById("nationality").value.trim() != ""
+            ) {
+
+                addJugador()
+                    .then(() => {
+                        getJugador(); // recarga la tabla
+                        clearInputs(); // limpia los inputs
+                    });
+
+            }
+
+        }
+
+        /* elimina un juego */
+        function deleteJugador(id) {
+        
+            removeJugador(id)
+                .then(() => {
+                    getJugador();
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+            
+        }
+
+        /* actualiza un juego */
+        function updateJugador() {
+            modifyJugador().then(() => {
+                getJugador();
+                closePopup();
+            });
+        }
+
+        /* crea una fila en la tabla */
+        /* crea una fila en la tabla */
+        function insertRow(jugador) {
+            console.log("Datos del jugador:", jugador);
+            const tbody = document.querySelector("tbody");
+            const row = tbody.insertRow();
+        
+            // Importante: Verifica que jugador.id exista. 
+            // MockAPI a veces lo devuelve como string o number.
+            const id = jugador.id;
+        
+            row.innerHTML = `
+                <td>${id}</td>
+                <td>${jugador.name}</td>
+                <td>${jugador.club}</td>
+                <td>${jugador.nationality}</td>
+                <td>
+                    <button class="edit-btn">EDIT</button>
+                </td>
+                <td>
+                    <button class="delete-btn">DELETE</button>
+                </td>
+            `;
+            
+            const editBtn = row.querySelector(".edit-btn");
+            const deleteBtn = row.querySelector(".delete-btn");
+            
+            // Editar: Pasamos los datos actuales al popup
+            editBtn.addEventListener("click", () => {
+                openPopup(
+                    id,
+                    jugador.name,
+                    jugador.club,
+                    jugador.nationality
+                );
+            });
+        
+            // Eliminar: Llamamos a la función con el ID
+            deleteBtn.addEventListener("click", () => {
+                if(confirm("¿Seguro que quieres borrar a este jugador?")) {
+                    deleteJugador(id);
+                }
+            });
+        }
+
+        /* abre la ventanita de editar */ 
+        function openPopup(id, name, club, nationality) {
+
+            document.getElementById("popup").hidden = false;
+
+            document.getElementById("editId").value = id;
+            document.getElementById("editName").value = name;
+            document.getElementById("editClub").value = club;
+            document.getElementById("editNationality").value = nationality;
+
+        }
+
+        /* cierra el popup */
+        function closePopup() {
+            document.getElementById("popup").hidden = true;
+        }
+
+        /* limpia los campos de agregar */
+        function clearInputs() {
+            document.getElementById("name").value = "";
+            document.getElementById("club").value = "";
+            document.getElementById("nationality").value = "";
+        }
+    </script>
+
+</head>
+
+<body>
+
+    <h1>JUGADORES</h1>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Club</th>
+                <th>Nationatily</th>
+                <th colspan="2"></th>
+            </tr>
+        </thead>
+
+        <tbody></tbody>
+
+        <tfoot>
+            <tr>
+
+                <td></td>
+
+                <td><input id="name" placeholder="Nombre"></td>
+                <td><input id="club" placeholder="Club"></td>
+                <td><input id="nationality" placeholder="Nationatily"></td>
+
+                <td colspan="2">
+                    <button class="add-btn" onclick="saveJugador()">ADD</button>
+                </td>
+
+            </tr>
+        </tfoot>
+
+    </table>
+
+    <div id="popup" hidden>
+
+        <h3>EDIT PLAYERS</h3>
+
+        <input id="editId" readonly><br><br>
+        <input id="editName"><br><br>
+        <input id="editClub"><br><br>
+        <input id="editNationality"><br><br>
+
+        <button class="edit-btn" onclick="updateJugador()">UPDATE</button>
+        <button class="delete-btn" onclick="closePopup()">CLOSE</button>
+
+    </div>
+
+</body>
+</html>
